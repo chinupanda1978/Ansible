@@ -1,0 +1,9 @@
+---
+- hosts: db
+  user: root
+  become: True
+  gather_facts: no
+  tasks: 
+  - name: display msg
+    debug: msg="My Name is Chinu"  
+
