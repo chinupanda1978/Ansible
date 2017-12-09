@@ -6,4 +6,6 @@
   tasks: 
   - name: display msg
     debug: msg="My Name is Chinu"  
+  - name: installing ntp
+    yum: name=ntp state=present
 
