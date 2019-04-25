@@ -1,0 +1,30 @@
+---
+- name: SalesEdge yum update
+  hosts: "{{ host_name | default('empty_group') }}"
+  become: true
+  gather_facts: true
+  tasks:
+
+  - name: Check that the {{ host_name }} variable was given.
+    fail:
+      msg: "You must provde the host_name variable on the command line."
+    when: (host_name is not defined) or (host_name == '')
+
+ # {{ yum_exclude }} comes from ./group_vars
+    - name: Patch everything except for exclusions in ./group_vars files.
+      yum:
+        name: '*'
+        state: latest
+        exclude: "{{  yum_exclude | join(',') }}"
+
+  - name: mtab copy
+    copy:
+      src: /etc/mtab
+      dest: /tmp/mtab
+      remote_src: yes
+      force: true
+
+
+  - name: reboot
+    reboot:
+      reboot_timeout: 360
