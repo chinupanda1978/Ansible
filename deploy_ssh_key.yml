@@ -1,0 +1,34 @@
+---
+
+# Deploy SSH keys from your $HOME directory to the servers in the lane.
+# USAGE:  ansible-playbook deploy_ssh_key.yml -e 'host_name=<hostnames>' -k
+
+- name: Deploy ssh key to servers
+  hosts: "{{ host_name | default('empty_group') }}"
+  become: false
+  gather_facts: true
+  vars:
+    key_location: "{{ lookup('env','HOME') + '/.ssh/id_rsa.pub' }}"
+  tasks:
+
+  - name: Check that the {{ host_name }} variable was given.
+    fail:
+      msg: "You must provde the host_name variable on the command line."
+    when: (host_name is not defined) or (host_name == '')
+
+  - name: Check that the {{ key_location }} file exists.  MUST BE RSA!
+    stat:
+      path: "{{ key_location }}"
+    delegate_to: localhost
+    register: ssh_key
+
+  - fail:
+      msg: "You need an RSA generated SSH key in your home directory to continue."
+    when: ssh_key.stat.exists == false
+
+  - name: Copy the key to the user's home directory
+    authorized_key:
+      user: "{{ ansible_user_id }}"
+      state: present
+      manage_dir: true
+      key: "{{ lookup('file', key_location) }}"
